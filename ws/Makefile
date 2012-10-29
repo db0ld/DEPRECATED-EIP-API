@@ -6,13 +6,13 @@
 ## ########################################################################## ##
 
 ## Packages required to build the project
-SRC_PACKAGES := yojson, macaque.syntax
+SRC_PACKAGES := yojson macaque.syntax
 
 ## Source files
 SRC_FILES    := 		\
 		eliomJson.eliom	\
-		main.eliom	\
-		achievement.eliom	\
+		db.eliom	\
+		user.eliom	\
 				\
 
 ## Required binaries

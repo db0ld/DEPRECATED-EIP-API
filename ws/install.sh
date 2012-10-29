@@ -14,14 +14,26 @@ function	edit_conf_file() {
     port=$2
     pwd=`pwd | sed 's#\/#\\\/#g'`
 
-    if [ -e $file.bak ]
-    then mv $file.bak $file
+    if [ -e .$file.bak ]
+    then mv .$file.bak $file
     fi
 
-    cp $file $file.bak && \
+    cp $file .$file.bak && \
 	sed -i".tmp" 's/\$PORT/'$port'/' $file && \
 	sed -i".tmp" 's/\$USER/'$USER'/' $file && \
 	sed -i".tmp" 's/\$PWD/'$pwd'/' $file && \
+	echo -n "Your PostgreSQL login ("$USER")? " && \
+	read dblogin && \
+	if [ -z $dblogin ]
+         then sed -i".tmp" 's/\$DBLOGIN/'$USER'/' $file
+         else sed -i".tmp" 's/\$DBLOGIN/'$dblogin'/' $file
+        fi && \
+	echo -n "Your PostgreSQL password? " && \
+	read dbpassword && \
+        sed -i".tmp" 's/\$DBPASSWORD/'$dbpassword'/' $file
+	echo -n "The name of the database? " && \
+	read dbname && \
+        sed -i".tmp" 's/\$DBNAME/'$dbname'/' $file
 	rm *.tmp && \
 	return 0
     return 1
@@ -31,7 +43,7 @@ echo -n "Install Modules... " && \
 
     echo "Done." && \
 
-    echo -n "Edit configuration file... " && \
+    echo "Edit configuration file... " && \
     edit_conf_file $conf $port && \
     echo "Done." && \
     echo "LaVieEstUnJeu API has been correctly installed. Now you can:" && \
