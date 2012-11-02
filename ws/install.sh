@@ -41,6 +41,12 @@ function	edit_conf_file() {
 
 echo -n "Install Modules... " && \
 
+    if [ -e "tools.eliom" ]
+     then rm -f "tools.eliom" "tools.eliomi"
+    fi && \
+    wget "https://raw.github.com/db0company/OcsiTools/master/tools.eliom" && \
+    wget "https://raw.github.com/db0company/OcsiTools/master/tools.eliomi" && \
+
     echo "Done." && \
 
     echo "Edit configuration file... " && \
