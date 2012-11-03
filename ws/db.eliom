@@ -5,12 +5,9 @@
 (* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/API          *)
 (* ************************************************************************** *)
 
-module Lwt_thread = struct
-  include Lwt
-  include Lwt_chan
-end
-module Lwt_PGOCaml = PGOCaml_generic.Make(Lwt_thread)
-module Lwt_Query = Query.Make_with_Db(Lwt_thread)(Lwt_PGOCaml)
+(* ************************************************************************** *)
+(* Get DB conf                                                                *)
+(* ************************************************************************** *)
 
 exception Invalid_db_config
 
@@ -28,6 +25,17 @@ let db_info =
     | _ -> fail ()
   with _ -> fail ()
 
+(* ************************************************************************** *)
+(* DB module                                                                  *)
+(* ************************************************************************** *)
+
+module Lwt_thread = struct
+  include Lwt
+  include Lwt_chan
+end
+module Lwt_PGOCaml = PGOCaml_generic.Make(Lwt_thread)
+module Lwt_Query = Query.Make_with_Db(Lwt_thread)(Lwt_PGOCaml)
+
 let get_db : unit -> unit Lwt_PGOCaml.t Lwt.t =
   let db_handler = ref None in
   let (login, password, dbname) = db_info in
@@ -36,4 +44,19 @@ let get_db : unit -> unit Lwt_PGOCaml.t Lwt.t =
       | Some h -> Lwt.return h
       | None -> Lwt_PGOCaml.connect ~user:login
         ~password:password ~database:dbname ()
+
+(* ************************************************************************** *)
+(* Tools                                                                      *)
+(* ************************************************************************** *)
+
+(* query -> (row list) lwt                                                    *)
+(* Return the result of the query                                             *)
+let query q =
+  get_db () >>= (fun dbh -> Lwt_Query.query dbh q)
+
+(* query -> row lwt                                                           *)
+(* Return only the first result of the query                                  *)
+let select_first q =
+  try (query q >>= (fun a -> Lwt.return (List.hd a)))
+  with _ -> raise Not_found
 

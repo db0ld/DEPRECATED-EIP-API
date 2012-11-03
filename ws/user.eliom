@@ -8,6 +8,10 @@
 open Eliom_content
 open Eliom_parameter
 
+(* ************************************************************************** *)
+(* Table                                                                      *)
+(* ************************************************************************** *)
+
 let user_id_seq = (<:sequence< serial "user_id_seq" >>)
 
 let table = <:table< user (
@@ -26,47 +30,55 @@ let table = <:table< user (
   fk_locale_id integer NOT NULL
 ) >>
 
-let select_first query =
-  try ((Db.get_db () >>= (fun dbh -> Db.Lwt_Query.query dbh query))
-          >>= (fun a -> Lwt.return (List.hd a)))
-  with _ -> raise Not_found
+(* ************************************************************************** *)
+(* Tools                                                                      *)
+(* ************************************************************************** *)
 
+(* int -> user row                                                            *)
 let get_user_from_id id =
-  select_first
+  Db.select_first
     (<:select<
-	row | row in $table$ ; row.id = $int32:id$ >>)
+        row | row in $table$ ; row.id = $int32:id$ >>)
 
+(* string -> user row                                                         *)
 let get_user_from_login login =
-  select_first
+  Db.select_first
     (<:select<
-	row | row in $table$ ; row.login = $string:login$ >>)
+        row | row in $table$ ; row.login = $string:login$ >>)
 
+(* string -> bool                                                             *)
+(* Check if the string is a positive number                                   *)
 let is_numeric s =
-  try ignore (int_of_string s); true
+  try let n = int_of_string s in
+      if n >= 0 then true else false
   with _ -> false
 
-let user =
+(* string -> user row                                                         *)
+(* Check if the id is a number or a login and return info about the user      *)
+let get_user user_id =
+  if (is_numeric user_id)
+  then get_user_from_id (Int32.of_string user_id)
+  else get_user_from_login user_id
+
+(* ************************************************************************** *)
+(* Get profile of the user                                                    *)
+(* ************************************************************************** *)
+
+let _ =
   EliomJson.register_service
     ~path:["user"]
     ~get_params:(suffix (string "user_id"))
     (fun user_id () ->
-      let user =
-	if (is_numeric user_id)
-	then get_user_from_id (Int32.of_string user_id)
-	else get_user_from_login user_id
-      in
+      let user = get_user user_id in
       (user >>= fun user ->
        Lwt.return
-         (`List
-             [`Assoc
-                [("id",        `Int    (Int32.to_int user#!id));
-		 ("login",     `String user#!login);
-		 ("firstname", `String user#!firstname);
-		 ("surname",   `String user#!surname);
-		 ("gender",    `String user#!gender);
-		 (* ("birthdate", `String user#!birthdate); *)
-		 ("email",     `String user#!email);
-                ]
-            ])
-    )
-    )
+         (`List [`Assoc
+                    [("id",        `Int    (Int32.to_int user#!id));
+                     ("login",     `String user#!login);
+                     ("firstname", `String user#!firstname);
+                     ("surname",   `String user#!surname);
+                     ("gender",    `String user#!gender);
+                     (* ("birthdate", `String user#!birthdate); *)
+                     ("email",     `String user#!email);
+                    ]])))
+
