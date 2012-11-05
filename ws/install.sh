@@ -47,6 +47,12 @@ echo -n "Install Modules... " && \
     wget "https://raw.github.com/db0company/OcsiTools/master/tools.eliom" && \
     wget "https://raw.github.com/db0company/OcsiTools/master/tools.eliomi" && \
 
+    if [ -e "otools.ml" ]
+     then rm -f "otools.ml" "otools.mli"
+    fi && \
+    wget "https://raw.github.com/db0company/OcsiTools/master/otools.ml" && \
+    wget "https://raw.github.com/db0company/Ocsitools/master/otools.mli" && \
+
     echo "Done." && \
 
     echo "Edit configuration file... " && \

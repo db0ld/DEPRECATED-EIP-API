@@ -6,10 +6,11 @@
 ## ########################################################################## ##
 
 ## Packages required to build the project
-SRC_PACKAGES := yojson macaque.syntax
+SRC_PACKAGES := calendar yojson macaque.syntax
 
 ## Source files
 SRC_FILES    := 		\
+		otools.ml	\
 		eliomJson.eliom	\
 		db.eliom	\
 		user.eliom	\
