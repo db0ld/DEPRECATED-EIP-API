@@ -7,6 +7,7 @@
 
 open Eliom_content
 open Eliom_parameter
+open CalendarLib
 
 (* ************************************************************************** *)
 (* Table                                                                      *)
@@ -31,7 +32,35 @@ let table = <:table< user (
 ) >>
 
 (* ************************************************************************** *)
-(* Tools                                                                      *)
+(* Special types                                                              *)
+(* ************************************************************************** *)
+
+(* Gender type                                                                *)
+module type GENDER =
+sig
+  type t
+  val to_string : t -> string
+  val of_string : string -> t
+end
+module Gender : GENDER =
+struct
+  type t = Male | Female | Other | Undefined
+  let default = Undefined
+  let to_string = function
+    | Male      -> "male"
+    | Female    -> "female"
+    | Other     -> "other"
+    | Undefined -> "undefined"
+  let of_string = function
+    | "male"      -> Male
+    | "female"    -> Female
+    | "other"     -> Other
+    | "undefined" -> Other
+    | _           -> default
+end
+
+(* ************************************************************************** *)
+(* SQL Tools                                                                  *)
 (* ************************************************************************** *)
 
 (* int -> user row                                                            *)
@@ -46,19 +75,62 @@ let get_user_from_login login =
     (<:select<
         row | row in $table$ ; row.login = $string:login$ >>)
 
-(* string -> bool                                                             *)
-(* Check if the string is a positive number                                   *)
-let is_numeric s =
-  try let n = int_of_string s in
-      if n >= 0 then true else false
-  with _ -> false
-
 (* string -> user row                                                         *)
 (* Check if the id is a number or a login and return info about the user      *)
 let get_user user_id =
-  if (is_numeric user_id)
+  if (Otools.is_numeric user_id)
   then get_user_from_id (Int32.of_string user_id)
   else get_user_from_login user_id
+
+let create_user (login, firstname, surname, gender, email, password) =
+  (* todo: check information validity *)
+  if 1 = 2
+  then Otools.Failure "wrong universe"
+  else
+    (let test_date = CalendarLib.Date.make 2012 11 03
+    and now = CalendarLib.Calendar.now () in
+     print_endline "INSERTION";
+     ignore (Db.query (<:insert< $table$ :=
+       {
+	 id = table?id;
+	 creation_time     = $timestamp:now$;(* todo *)
+	 modification_time = $timestamp:now$;(* todo *)
+	 login     = $string:login$;
+	 firstname = $string:firstname$;
+	 surname   = $string:surname$;
+	 gender    = $string:(Gender.to_string gender)$;
+	 birthdate = $date:test_date$;(* todo *)
+	 email     = $string:email$;
+	 password_hash = $string:password$; (* todo *)
+	 password_salt = $string:password$; (* todo *)
+	 fk_avatar_media_id = 0; (* todo *)
+	 fk_locale_id = 0; (* todo *)
+       } >>)); (* todo: how to check result of a query? *)
+     Otools.Success ())
+
+(* ************************************************************************** *)
+(* JSON Tools                                                                 *)
+(* ************************************************************************** *)
+
+(* user row -> json                                                           *)
+let json_user_profile user : Yojson.Basic.json =
+  `List [`Assoc
+            [("id",        `Int    (Int32.to_int user#!id));
+             ("login",     `String user#!login);
+             ("firstname", `String user#!firstname);
+             ("surname",   `String user#!surname);
+             (* ("gender",    `String (Gender.to_string user#!gender)); *)
+             (* ("birthdate", `String user#!birthdate); *)
+             ("email",     `String user#!email);
+            ]]
+
+(* string -> json                                                             *)
+let json_error error : Yojson.Basic.json =
+  `Assoc [("error", `String error)]
+
+(* ************************************************************************** *)
+(* API Queries                                                                *)
+(* ************************************************************************** *)
 
 (* ************************************************************************** *)
 (* Get profile of the user                                                    *)
@@ -71,14 +143,30 @@ let _ =
     (fun user_id () ->
       let user = get_user user_id in
       (user >>= fun user ->
-       Lwt.return
-         (`List [`Assoc
-                    [("id",        `Int    (Int32.to_int user#!id));
-                     ("login",     `String user#!login);
-                     ("firstname", `String user#!firstname);
-                     ("surname",   `String user#!surname);
-                     ("gender",    `String user#!gender);
-                     (* ("birthdate", `String user#!birthdate); *)
-                     ("email",     `String user#!email);
-                    ]])))
+       Lwt.return (json_user_profile user)))
 
+(* ************************************************************************** *)
+(* Register a new user                                                        *)
+(* ************************************************************************** *)
+
+let _ =
+  EliomJson.register_service
+    ~path:["user";"register"]
+    ~get_params:(string "login"
+		 ** string "firstname"
+		 ** string "surname"
+		 ** (user_type
+		       ~of_string:Gender.of_string
+		       ~to_string:Gender.to_string
+		       "gender")
+		 (* ** string "birthdate" *)
+		 ** string "email"
+		 ** string "password"
+                )
+    (fun (login, (firstname, (surname, (gender, (email, password))))) () ->
+      match create_user
+	(login, firstname, surname, gender, email, password) with
+          | Otools.Success ()    ->
+	    (get_user login >>= fun user ->
+	      Lwt.return (json_user_profile user))
+	  | Otools.Failure error -> Lwt.return (json_error error))
