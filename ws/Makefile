@@ -11,6 +11,8 @@ SRC_PACKAGES := calendar yojson macaque.syntax
 ## Source files
 SRC_FILES    := 		\
 		otools.ml	\
+		jsonTools.ml	\
+		dateTime.ml	\
 		eliomJson.eliom	\
 		db.eliom	\
 		user.eliom	\

@@ -23,7 +23,7 @@ let table = <:table< user (
   firstname text NOT NULL,
   surname text NOT NULL,
   gender text NOT NULL,
-  birthdate date (* DEFAULT(current_timestamp) *),
+  birthdate date NOT NULL, (* nullable? *)
   email text NOT NULL,
   password_hash text NOT NULL,
   password_salt text NOT NULL,
@@ -82,31 +82,31 @@ let get_user user_id =
   then get_user_from_id (Int32.of_string user_id)
   else get_user_from_login user_id
 
-let create_user (login, firstname, surname, gender, email, password) =
-  (* todo: check information validity *)
-  if 1 = 2
-  then Otools.Failure "wrong universe"
-  else
-    (let test_date = CalendarLib.Date.make 2012 11 03
-    and now = CalendarLib.Calendar.now () in
-     print_endline "INSERTION";
-     ignore (Db.query (<:insert< $table$ :=
-       {
+let create_user
+    (login, (firstname, (surname, (gender, (birthdate, (email, password)))))) =
+  let query =
+    let now = DateTime.to_datetime (DateTime.now ()) in
+    <:insert< $table$ :=
+      {
 	 id = table?id;
-	 creation_time     = $timestamp:now$;(* todo *)
-	 modification_time = $timestamp:now$;(* todo *)
+	 creation_time     = $timestamp:now$;
+	 modification_time = $timestamp:now$;
 	 login     = $string:login$;
 	 firstname = $string:firstname$;
 	 surname   = $string:surname$;
 	 gender    = $string:(Gender.to_string gender)$;
-	 birthdate = $date:test_date$;(* todo *)
+	 birthdate = $date:(DateTime.to_date birthdate)$;
 	 email     = $string:email$;
 	 password_hash = $string:password$; (* todo *)
 	 password_salt = $string:password$; (* todo *)
 	 fk_avatar_media_id = 0; (* todo *)
 	 fk_locale_id = 0; (* todo *)
-       } >>)); (* todo: how to check result of a query? *)
-     Otools.Success ())
+       } >> in
+  (* todo: check information validity *)
+  if 1 = 2
+  then Otools.Failure "wrong universe"
+  else (ignore (Db.query query); (* todo: how to check result of a query? *)
+	Otools.Success ())
 
 (* ************************************************************************** *)
 (* JSON Tools                                                                 *)
@@ -114,19 +114,20 @@ let create_user (login, firstname, surname, gender, email, password) =
 
 (* user row -> json                                                           *)
 let json_user_profile user : Yojson.Basic.json =
+  let birthdate = DateTime.raw_date_to_string user#!birthdate
+  and creation_time = DateTime.raw_to_string user#!creation_time
+  and modif_time = DateTime.raw_to_string user#!modification_time in
   `List [`Assoc
             [("id",        `Int    (Int32.to_int user#!id));
-             ("login",     `String user#!login);
-             ("firstname", `String user#!firstname);
-             ("surname",   `String user#!surname);
-             (* ("gender",    `String (Gender.to_string user#!gender)); *)
-             (* ("birthdate", `String user#!birthdate); *)
-             ("email",     `String user#!email);
+             ("creation_time",     `String creation_time);
+             ("modification_time", `String modif_time);
+             ("login",             `String user#!login);
+             ("firstname",         `String user#!firstname);
+             ("surname",           `String user#!surname);
+             ("gender",            `String user#!gender);
+             ("birthdate",         `String birthdate);
+             ("email",             `String user#!email);
             ]]
-
-(* string -> json                                                             *)
-let json_error error : Yojson.Basic.json =
-  `Assoc [("error", `String error)]
 
 (* ************************************************************************** *)
 (* API Queries                                                                *)
@@ -159,14 +160,16 @@ let _ =
 		       ~of_string:Gender.of_string
 		       ~to_string:Gender.to_string
 		       "gender")
-		 (* ** string "birthdate" *)
+		 ** (user_type
+		       ~of_string:DateTime.date_of_string
+		       ~to_string:DateTime.date_to_string
+		       "birthdate")
 		 ** string "email"
 		 ** string "password"
                 )
-    (fun (login, (firstname, (surname, (gender, (email, password))))) () ->
-      match create_user
-	(login, firstname, surname, gender, email, password) with
-          | Otools.Success ()    ->
-	    (get_user login >>= fun user ->
-	      Lwt.return (json_user_profile user))
-	  | Otools.Failure error -> Lwt.return (json_error error))
+    (fun infos () ->
+      match create_user infos with
+          | Otools.Success ()    -> Lwt.return (JsonTools.success)
+	    (* (get_user login >>= fun user -> *)
+	    (*   Lwt.return (json_user_profile user)) *)
+	  | Otools.Failure error -> Lwt.return (JsonTools.error error))
