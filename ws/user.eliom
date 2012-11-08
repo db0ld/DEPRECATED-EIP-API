@@ -85,17 +85,16 @@ let get_user user_id =
 let create_user
     (login, (firstname, (surname, (gender, (birthdate, (email, password)))))) =
   let query =
-    let now = DateTime.to_datetime (DateTime.now ()) in
     <:insert< $table$ :=
       {
 	 id = table?id;
-	 creation_time     = $timestamp:now$;
-	 modification_time = $timestamp:now$;
+	 creation_time     = $timestamp:(DateTime.now ())$;
+	 modification_time = $timestamp:(DateTime.now ())$;
 	 login     = $string:login$;
 	 firstname = $string:firstname$;
 	 surname   = $string:surname$;
 	 gender    = $string:(Gender.to_string gender)$;
-	 birthdate = $date:(DateTime.to_date birthdate)$;
+	 birthdate = $date:birthdate$;
 	 email     = $string:email$;
 	 password_hash = $string:password$; (* todo *)
 	 password_salt = $string:password$; (* todo *)
@@ -114,20 +113,20 @@ let create_user
 
 (* user row -> json                                                           *)
 let json_user_profile user : Yojson.Basic.json =
-  let birthdate = DateTime.raw_date_to_string user#!birthdate
-  and creation_time = DateTime.raw_to_string user#!creation_time
-  and modif_time = DateTime.raw_to_string user#!modification_time in
-  `List [`Assoc
-            [("id",        `Int    (Int32.to_int user#!id));
-             ("creation_time",     `String creation_time);
-             ("modification_time", `String modif_time);
-             ("login",             `String user#!login);
-             ("firstname",         `String user#!firstname);
-             ("surname",           `String user#!surname);
-             ("gender",            `String user#!gender);
-             ("birthdate",         `String birthdate);
-             ("email",             `String user#!email);
-            ]]
+  let birthdate = DateTime.date_to_string user#!birthdate
+  and creation_time = DateTime.to_string user#!creation_time
+  and modif_time = DateTime.to_string user#!modification_time in
+  `Assoc
+    [("id",        `Int    (Int32.to_int user#!id));
+     ("creation_time",     `String creation_time);
+     ("modification_time", `String modif_time);
+     ("login",             `String user#!login);
+     ("firstname",         `String user#!firstname);
+     ("surname",           `String user#!surname);
+     ("gender",            `String user#!gender);
+     ("birthdate",         `String birthdate);
+     ("email",             `String user#!email);
+    ]
 
 (* ************************************************************************** *)
 (* API Queries                                                                *)

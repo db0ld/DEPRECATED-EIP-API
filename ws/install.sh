@@ -53,6 +53,12 @@ echo -n "Install Modules... " && \
     wget "https://raw.github.com/db0company/OcsiTools/master/otools.ml" && \
     wget "https://raw.github.com/db0company/Ocsitools/master/otools.mli" && \
 
+    if [ -e "dateTime.ml" ]
+     then rm -f "dateTime.ml" "dateTime.mli"
+    fi && \
+    wget "https://github.com/LaVieEstUnJeu/Public-API/raw/master/examples/ocaml/dateTime.ml" && \
+    wget "https://github.com/LaVieEstUnJeu/Public-API/raw/master/examples/ocaml/dateTime.mli" && \
+
     echo "Done." && \
 
     echo "Edit configuration file... " && \
