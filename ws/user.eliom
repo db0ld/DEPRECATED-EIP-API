@@ -32,34 +32,6 @@ let table = <:table< user (
 ) >>
 
 (* ************************************************************************** *)
-(* Special types                                                              *)
-(* ************************************************************************** *)
-
-(* Gender type                                                                *)
-module type GENDER =
-sig
-  type t
-  val to_string : t -> string
-  val of_string : string -> t
-end
-module Gender : GENDER =
-struct
-  type t = Male | Female | Other | Undefined
-  let default = Undefined
-  let to_string = function
-    | Male      -> "male"
-    | Female    -> "female"
-    | Other     -> "other"
-    | Undefined -> "undefined"
-  let of_string = function
-    | "male"      -> Male
-    | "female"    -> Female
-    | "other"     -> Other
-    | "undefined" -> Other
-    | _           -> default
-end
-
-(* ************************************************************************** *)
 (* SQL Tools                                                                  *)
 (* ************************************************************************** *)
 
@@ -88,12 +60,12 @@ let create_user
     <:insert< $table$ :=
       {
 	 id = table?id;
-	 creation_time     = $timestamp:(DateTime.now ())$;
-	 modification_time = $timestamp:(DateTime.now ())$;
+	 creation_time     = $timestamp:(ApiTypes.DateTime.now ())$;
+	 modification_time = $timestamp:(ApiTypes.DateTime.now ())$;
 	 login     = $string:login$;
 	 firstname = $string:firstname$;
 	 surname   = $string:surname$;
-	 gender    = $string:(Gender.to_string gender)$;
+	 gender    = $string:(ApiTypes.Gender.to_string gender)$;
 	 birthdate = $date:birthdate$;
 	 email     = $string:email$;
 	 password_hash = $string:password$; (* todo *)
@@ -113,11 +85,11 @@ let create_user
 
 (* user row -> json                                                           *)
 let json_user_profile user : Yojson.Basic.json =
-  let birthdate = DateTime.date_to_string user#!birthdate
-  and creation_time = DateTime.to_string user#!creation_time
-  and modif_time = DateTime.to_string user#!modification_time in
+  let birthdate = ApiTypes.Date.to_string user#!birthdate
+  and creation_time = ApiTypes.DateTime.to_string user#!creation_time
+  and modif_time = ApiTypes.DateTime.to_string user#!modification_time in
   `Assoc
-    [("id",        `Int    (Int32.to_int user#!id));
+    [("id",                `Int    (Int32.to_int user#!id));
      ("creation_time",     `String creation_time);
      ("modification_time", `String modif_time);
      ("login",             `String user#!login);
@@ -156,12 +128,12 @@ let _ =
 		 ** string "firstname"
 		 ** string "surname"
 		 ** (user_type
-		       ~of_string:Gender.of_string
-		       ~to_string:Gender.to_string
+		       ~of_string:ApiTypes.Gender.of_string
+		       ~to_string:ApiTypes.Gender.to_string
 		       "gender")
 		 ** (user_type
-		       ~of_string:DateTime.date_of_string
-		       ~to_string:DateTime.date_to_string
+		       ~of_string:ApiTypes.Date.of_string
+		       ~to_string:ApiTypes.Date.to_string
 		       "birthdate")
 		 ** string "email"
 		 ** string "password"

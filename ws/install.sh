@@ -56,8 +56,7 @@ echo -n "Install Modules... " && \
     if [ -e "dateTime.ml" ]
      then rm -f "dateTime.ml" "dateTime.mli"
     fi && \
-    wget "https://github.com/LaVieEstUnJeu/Public-API/raw/master/examples/ocaml/dateTime.ml" && \
-    wget "https://github.com/LaVieEstUnJeu/Public-API/raw/master/examples/ocaml/dateTime.mli" && \
+    wget "https://github.com/LaVieEstUnJeu/Public-API/raw/master/examples/ocaml/apiTypes.ml" && \
 
     echo "Done." && \
 

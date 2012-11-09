@@ -12,7 +12,7 @@ SRC_PACKAGES := calendar yojson macaque.syntax
 SRC_FILES    := 		\
 		otools.ml	\
 		jsonTools.ml	\
-		dateTime.ml	\
+		apiTypes.ml	\
 		eliomJson.eliom	\
 		db.eliom	\
 		user.eliom	\
