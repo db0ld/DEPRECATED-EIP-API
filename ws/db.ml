@@ -52,7 +52,7 @@ let get_db : unit -> unit Lwt_PGOCaml.t Lwt.t =
 (* query -> (row list) lwt                                                    *)
 (* Return the result of the query                                             *)
 let query q =
-  get_db () >>= (fun dbh -> Lwt_Query.query dbh q)
+  get_db () >>= (fun dbh -> Lwt_Query.query dbh ~log:stderr q)
 
 (* query -> row lwt                                                           *)
 (* Return only the first result of the query                                  *)

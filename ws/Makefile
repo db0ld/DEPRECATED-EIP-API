@@ -14,10 +14,10 @@ SRC_FILES    := 		\
 		error.ml	\
 		jsonTools.ml	\
 		apiTypes.ml	\
-		eliomJson.eliom	\
-		db.eliom	\
-		user.eliom	\
-		auth.eliom	\
+		eliomJson.ml	\
+		db.ml		\
+		user.ml		\
+		auth.ml		\
 				\
 
 ## Required binaries
