@@ -11,11 +11,13 @@ SRC_PACKAGES := calendar yojson macaque.syntax
 ## Source files
 SRC_FILES    := 		\
 		otools.ml	\
+		error.ml	\
 		jsonTools.ml	\
 		apiTypes.ml	\
 		eliomJson.eliom	\
 		db.eliom	\
 		user.eliom	\
+		auth.eliom	\
 				\
 
 ## Required binaries
