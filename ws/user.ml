@@ -13,46 +13,11 @@ open CalendarLib
 (* Table                                                                      *)
 (* ************************************************************************** *)
 
-let user_id_seq = (<:sequence< serial "user_id_seq" >>)
-
-let table = <:table< user (
-  id integer NOT NULL DEFAULT(nextval $user_id_seq$),
-  creation_time timestamp NOT NULL (* DEFAULT(current_timestamp) *),
-  modification_time timestamp NOT NULL,
-  login text NOT NULL,
-  firstname text NOT NULL,
-  surname text NOT NULL,
-  gender text NOT NULL,
-  birthdate date NOT NULL, (* nullable? *)
-  email text NOT NULL,
-  password_hash text NOT NULL,
-  password_salt text NOT NULL,
-  fk_avatar_media_id integer (* DEFAULT(0) *),
-  fk_locale_id integer NOT NULL
-) >>
+include UserTable
 
 (* ************************************************************************** *)
 (* SQL Tools                                                                  *)
 (* ************************************************************************** *)
-
-(* int -> user row                                                            *)
-let get_user_from_id id =
-  Db.select_first
-    (<:select<
-        row | row in $table$ ; row.id = $int32:id$ >>)
-
-(* string -> user row                                                         *)
-let get_user_from_login login =
-  Db.select_first
-    (<:select<
-        row | row in $table$ ; row.login = $string:login$ >>)
-
-(* string -> user row                                                         *)
-(* Check if the id is a number or a login and return info about the user      *)
-let get_user user_id =
-  if (Otools.is_numeric user_id)
-  then get_user_from_id (Int32.of_string user_id)
-  else get_user_from_login user_id
 
 let create_user
     (login, (firstname, (surname, (gender, (birthdate, (email, password)))))) =
@@ -110,12 +75,18 @@ let json_user_profile user : Yojson.Basic.json =
 
 let _ =
   EliomJson.register_service
-    ~path:["user"]
-    ~get_params:(suffix (string "user_id"))
-    (fun user_id () ->
-      let user = get_user user_id in
-      (user >>= fun user ->
-       Lwt.return (json_user_profile user)))
+    ~path:["user"; ""]
+    ~get_params:(string "user_id" ** string "token")
+    (fun (user_id, token) () ->
+      lwt token_owner = Auth.token_owner token in
+      match token_owner with
+	| Some user_logued ->
+	  (lwt user = get_user user_id in
+	   Lwt.return
+	     (match user with
+	       | Some user -> json_user_profile user
+	       | None -> JsonTools.error Error.no_user))
+	| None -> Lwt.return (JsonTools.error Error.auth_req))
 
 (* ************************************************************************** *)
 (* Register a new user                                                        *)

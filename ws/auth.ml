@@ -14,15 +14,15 @@ open Otools
 (* Table                                                                      *)
 (* ************************************************************************** *)
 
-let auth_id_seq = (<:sequence< serial "auth_id_seq" >>)
+let api_auth_id_seq = (<:sequence< serial "api_auth_id_seq" >>)
 
 let table = <:table< api_auth (
-  id integer NOT NULL DEFAULT(nextval $auth_id_seq$),
+  id integer NOT NULL DEFAULT(nextval $api_auth_id_seq$),
   creation_time timestamp NOT NULL (* DEFAULT(current_timestamp) *),
   modification_time timestamp NOT NULL,
   expiration_time timestamp NOT NULL,
   fk_user_id integer NOT NULL,
-  fk_api_cliend_id integer NOT NULL,
+  fk_api_client_id integer NOT NULL,
   token text NOT NULL
 ) >>
 
@@ -66,7 +66,7 @@ let sql_auth user =
          modification_time = $timestamp:now$;
          expiration_time   = $timestamp:expiration$;
          fk_user_id        = $int32:(user#!id)$;
-         fk_api_cliend_id  = 0; (* todo: what is it? *)
+         fk_api_client_id  = 0; (* todo: what is it? *)
          token             = $string:token$
        } >> in
   let logged = ignore (Db.query query)(* todo: check result *); true in
@@ -79,9 +79,12 @@ let get_token token =
     Db.select_first
       (<:select< row | row in $table$ ; row.token = $string:token$ >>) in
   Lwt.return
-    (if ApiTypes.DateTime.is_past token#!expiration_time
-     then (print_endline "Nope"; None) (* todo: delete *)
-     else Some token)
+    (match token with
+      | Some token ->
+	if ApiTypes.DateTime.is_past token#!expiration_time
+	then (print_endline "Nope"; None) (* todo: delete *)
+	else Some token
+      | None -> None)
 
 (* ************************************************************************** *)
 (* Auth tools                                                                 *)
@@ -105,7 +108,7 @@ let token_owner token =
   lwt token = get_token token in
   Lwt.return
     (match token with
-      | Some token -> Some (User.get_user_from_id token#!fk_user_id)
+      | Some token -> Some (UserTable.get_user_from_id token#!fk_user_id)
       | None       -> None)
 
 (* string -> bool Lwt                                                          *)
@@ -140,13 +143,16 @@ let _ =
     ~path:["auth";"login"]
     ~get_params:(string "login" ** string "password")
     (fun (login, password) () ->
-      lwt user = User.get_user login in
+      lwt user = UserTable.get_user login in
       Lwt.return
-        (if check_password user password
-         then match authenticate user with
-           | Success auth -> json_auth auth
-           | Failure err  -> JsonTools.error err
-         else JsonTools.error Error.wrong_pwd))
+        (match user with
+	  | Some user ->
+	    (if check_password user password
+             then match authenticate user with
+               | Success auth -> json_auth auth
+               | Failure err  -> JsonTools.error err
+             else JsonTools.error Error.wrong_pwd)
+	  | None -> JsonTools.error Error.wrong_usr))
 
 (* ************************************************************************** *)
 (* Logout                                                                     *)

@@ -16,8 +16,9 @@ SRC_FILES    := 		\
 		apiTypes.ml	\
 		eliomJson.ml	\
 		db.ml		\
-		user.ml		\
+		userTable.ml	\
 		auth.ml		\
+		user.ml		\
 				\
 
 ## Required binaries

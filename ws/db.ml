@@ -57,6 +57,5 @@ let query q =
 (* query -> row lwt                                                           *)
 (* Return only the first result of the query                                  *)
 let select_first q =
-  try (query q >>= (fun a -> Lwt.return (List.hd a)))
-  with _ -> raise Not_found
+  query q >>= (fun a -> Lwt.return (try Some (List.hd a) with _ -> None))
 
