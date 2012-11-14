@@ -19,6 +19,7 @@ SRC_FILES    := 		\
 		userTable.ml	\
 		auth.ml		\
 		user.ml		\
+		achievement.ml	\
 				\
 
 ## Required binaries
