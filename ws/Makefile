@@ -6,7 +6,7 @@
 ## ########################################################################## ##
 
 ## Packages required to build the project
-SRC_PACKAGES := calendar yojson macaque.syntax
+SRC_PACKAGES := calendar yojson macaque.syntax str
 
 ## Source files
 SRC_FILES    := 		\
@@ -20,6 +20,7 @@ SRC_FILES    := 		\
 		auth.ml		\
 		user.ml		\
 		achievement.ml	\
+		validation.ml	\
 				\
 
 ## Required binaries
