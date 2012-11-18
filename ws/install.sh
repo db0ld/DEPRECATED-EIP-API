@@ -14,10 +14,6 @@ function	edit_conf_file() {
     port=$2
     pwd=`pwd | sed 's#\/#\\\/#g'`
 
-    if [ -e .$file.bak ]
-    then mv .$file.bak $file
-    fi
-
     cp $file .$file.bak && \
 	sed -i".tmp" 's/\$PORT/'$port'/' $file && \
 	sed -i".tmp" 's/\$USER/'$USER'/' $file && \
@@ -39,24 +35,57 @@ function	edit_conf_file() {
     return 1
 }
 
-echo -n "Install Modules... " && \
+function	delete_files() {
+    if [ -e .$conf.bak ]
+    then mv .$conf.bak $conf
+    fi
 
-    if [ -e "tools.eliom" ]
-     then rm -f "tools.eliom" "tools.eliomi"
-    fi && \
+    rm -f "tools.eliom" "tools.eliomi"
+    rm -f "otools.ml" "otools.mli"
+    rm -f "apiTypes.ml"
+}
+
+function	install_modules() {
+    delete_files
     wget "https://raw.github.com/db0company/OcsiTools/master/tools.eliom" && \
     wget "https://raw.github.com/db0company/OcsiTools/master/tools.eliomi" && \
-
-    if [ -e "otools.ml" ]
-     then rm -f "otools.ml" "otools.mli"
-    fi && \
     wget "https://raw.github.com/db0company/OcsiTools/master/otools.ml" && \
     wget "https://raw.github.com/db0company/Ocsitools/master/otools.mli" && \
-
-    if [ -e "apiTypes.ml" ]
-     then rm -f "apiTypes.ml"
-    fi && \
     wget "https://github.com/LaVieEstUnJeu/Public-API/raw/master/examples/ocaml/apiTypes.ml" && \
+    return 0
+    return 1
+}
+
+function	install_modules_links() {
+    delete_files
+    defaultpath=~/dev
+    echo -n "Depositories path ("$defaultpath")? " && \
+    read path && \
+    if [ -z $path ]
+    then path=$defaultpath
+    fi && \
+    ln -s $path"/OcsiTools/tools.eliom" && \
+    ln -s $path"/OcsiTools/tools.eliomi" && \
+    ln -s $path"/OcsiTools/otools.ml" && \
+    ln -s $path"/OcsiTools/otools.mli" && \
+    ln -s $path"/Public-API/examples/ocaml/apiTypes.ml" && \
+    return 0
+    return 1
+}
+
+if [ $1 = "-clean" ]
+then
+    make clean
+    delete_files
+    exit 0
+fi
+
+echo -n "Install Modules... " && \
+
+    if [ $1 = "-link" ]
+    then install_modules_links
+    else install_modules
+    fi && \
 
     echo "Done." && \
 
