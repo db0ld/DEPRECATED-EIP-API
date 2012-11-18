@@ -8,6 +8,7 @@
 open Eliom_content
 open Eliom_parameter
 open CalendarLib
+open Otools
 
 (* ************************************************************************** *)
 (* Table                                                                      *)
@@ -40,9 +41,9 @@ let create_user
        } >> in
   (* todo: check information validity *)
   if 1 = 2
-  then Otools.Failure "wrong universe"
+  then Failure Rspcode.invalid_login
   else (ignore (Db.query query); (* todo: how to check result of a query? *)
-	Otools.Success ())
+	Success ())
 
 (* ************************************************************************** *)
 (* JSON Tools                                                                 *)
@@ -84,9 +85,9 @@ let _ =
 	  (lwt user = get_user user_id in
 	   Lwt.return
 	     (match user with
-	       | Some user -> json_user_profile user
-	       | None -> JsonTools.error Error.no_user))
-	| None -> Lwt.return (JsonTools.error Error.auth_req))
+	       | Some user -> JsonTools.success (json_user_profile user)
+	       | None -> JsonTools.error Rspcode.no_user))
+	| None -> Lwt.return (JsonTools.error Rspcode.invalid_token))
 
 (* ************************************************************************** *)
 (* Register a new user                                                        *)
@@ -111,7 +112,7 @@ let _ =
                 )
     (fun infos () ->
       match create_user infos with
-          | Otools.Success ()    -> Lwt.return (JsonTools.success)
+          | Success _    -> Lwt.return (JsonTools.success `Null)
 	    (* (get_user login >>= fun user -> *)
 	    (*   Lwt.return (json_user_profile user)) *)
-	  | Otools.Failure error -> Lwt.return (JsonTools.error error))
+	  | Failure error -> Lwt.return (JsonTools.error error))

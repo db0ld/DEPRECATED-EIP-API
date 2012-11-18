@@ -149,10 +149,10 @@ let _ =
 	  | Some user ->
 	    (if check_password user password
              then match authenticate user with
-               | Success auth -> json_auth auth
+               | Success auth -> JsonTools.success (json_auth auth)
                | Failure err  -> JsonTools.error err
-             else JsonTools.error Error.wrong_pwd)
-	  | None -> JsonTools.error Error.wrong_usr))
+             else JsonTools.error Rspcode.wrong_pwd)
+	  | None -> JsonTools.error Rspcode.wrong_usr))
 
 (* ************************************************************************** *)
 (* Logout                                                                     *)

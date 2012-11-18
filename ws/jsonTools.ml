@@ -5,10 +5,18 @@
 (* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/API          *)
 (* ************************************************************************** *)
 
-(* string -> json                                                             *)
-let error error : Yojson.Basic.json =
-  `Assoc [("error", `String error)]
+(* Return formatted JSON trees containing API responses                       *)
 
-let success : Yojson.Basic.json =
-  `String "OK"
+let response (rspcode, rspmsg) tree =
+  `Assoc [("rspcode", `Int rspcode);
+	  ("rspmsg", `String rspmsg);
+	  ("content", tree);
+	 ]
+
+let error err =
+  response err `Null
+
+let success =
+  response Rspcode.success
+
 

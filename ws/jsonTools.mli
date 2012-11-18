@@ -5,7 +5,8 @@
 (* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/API          *)
 (* ************************************************************************** *)
 
-(* Return a JSON tree containing an error message                             *)
-val error : string -> Yojson.Basic.json
+(* Return formatted JSON trees containing API responses                       *)
 
-val success : Yojson.Basic.json
+val response : Rspcode.t -> Yojson.Basic.json -> Yojson.Basic.json
+val error    : Rspcode.t -> Yojson.Basic.json
+val success  : Yojson.Basic.json -> Yojson.Basic.json
