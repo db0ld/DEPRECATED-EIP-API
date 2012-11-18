@@ -52,10 +52,12 @@ let get_db : unit -> unit Lwt_PGOCaml.t Lwt.t =
 (* query -> (row list) lwt                                                    *)
 (* Return the result of the query                                             *)
 let query q =
-  get_db () >>= (fun dbh -> Lwt_Query.query dbh ~log:stderr q)
+  lwt dbh = get_db () in
+  Lwt_Query.query dbh ~log:stderr q
 
 (* query -> row lwt                                                           *)
 (* Return only the first result of the query                                  *)
 let select_first q =
-  query q >>= (fun a -> Lwt.return (try Some (List.hd a) with _ -> None))
+  lwt a = query q in
+  Lwt.return (try Some (List.hd a) with _ -> None)
 
