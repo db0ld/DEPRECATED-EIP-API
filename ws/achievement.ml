@@ -26,10 +26,10 @@ let select id =
 	 row_a in $table$ ; row_u in $User.table$ ;
          row_a.id = $int32:id$ >>)
 
-let _ =
-  lwt a = select 1 in
-  Lwt.return
-    (match a with
-      | Some a -> print_endline a#!u#!login
-      | None   -> print_endline "none")
+(* let _ = *)
+(*   lwt a = select 1 in *)
+(*   Lwt.return *)
+(*     (match a with *)
+(*       | Some a -> print_endline a#!u#!login *)
+(*       | None   -> print_endline "none") *)
 
