@@ -9,12 +9,18 @@
 
 let response (rspcode, rspmsg) tree =
   `Assoc [("rspcode", `Int rspcode);
-	  ("rspmsg", `String rspmsg);
-	  ("content", tree);
+	  ("rspmsg",  `String rspmsg);
+	  ("content",  tree);
 	 ]
 
 let error err =
   response err `Null
+
+let errors err =
+  let assoc (rspcode, rspmsg) =
+    `Assoc [("rspcode", `Int rspcode);
+	    ("rspmsg",  `String rspmsg)] in
+  response Rspcode.invalid_data (`List (List.map assoc err))
 
 let success =
   response Rspcode.success

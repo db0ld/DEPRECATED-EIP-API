@@ -43,10 +43,15 @@ let wrong_usr : t = (existence,  (rspmsg auth_fail) ^ "_LOGIN")
 (* ************************************************************************** *)
 
 let no_user : t = (existence, "USER_NOT_EXISTS")
+let login_exist : t = (incorrect, "USER_LOGIN_ALREADY_EXISTS")
 
 (* ************************************************************************** *)
 (* Data Validity                                                              *)
 (* ************************************************************************** *)
 
 let invalid_token : t = (invalid, "INVALID_TOKEN")
+let invalid_data  : t = (invalid, "INVALID_DATA")
 let invalid_login : t = (invalid, "INVALID_LOGIN")
+let invalid_name  : t = (invalid, "INVALID_NAME")
+let invalid_email : t = (invalid, "INVALID_EMAIL")
+let invalid_passw : t = (invalid, "INVALID_PASSWORD")

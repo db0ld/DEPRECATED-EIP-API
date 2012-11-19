@@ -10,6 +10,7 @@ SRC_PACKAGES := calendar yojson macaque.syntax str
 
 ## Source files
 SRC_FILES    := 		\
+		valid.ml	\
 		otools.ml	\
 		rspcode.ml	\
 		jsonTools.ml	\
@@ -20,7 +21,6 @@ SRC_FILES    := 		\
 		auth.ml		\
 		user.ml		\
 		achievement.ml	\
-		validation.ml	\
 				\
 
 ## Required binaries

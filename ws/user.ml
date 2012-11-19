@@ -22,6 +22,15 @@ include UserTable
 
 let create_user
     (login, (firstname, (surname, (gender, (birthdate, (email, password)))))) =
+  let errors =
+    Otools.option_filter
+      [if Valid.login login = false
+       then Some Rspcode.invalid_login else None;
+       if Valid.name firstname = false || Valid.name surname = false
+       then Some Rspcode.invalid_name else None;
+       if Valid.email email = false
+       then Some Rspcode.invalid_passw else None;
+      ] in
   let query =
     <:insert< $table$ :=
       {
@@ -39,11 +48,10 @@ let create_user
 	 fk_avatar_media_id = 0; (* todo *)
 	 fk_locale_id = 0; (* todo *)
        } >> in
-  (* todo: check information validity *)
-  if 1 = 2
-  then Failure Rspcode.invalid_login
-  else (ignore (Db.query query); (* todo: how to check result of a query? *)
+  if List.length errors = 0
+  then (ignore (Db.query query); (* todo: how to check result of a query? *)
 	Success ())
+  else Failure errors
 
 (* ************************************************************************** *)
 (* JSON Tools                                                                 *)
@@ -115,4 +123,4 @@ let _ =
           | Success _    -> Lwt.return (JsonTools.success `Null)
 	    (* (get_user login >>= fun user -> *)
 	    (*   Lwt.return (json_user_profile user)) *)
-	  | Failure error -> Lwt.return (JsonTools.error error))
+	  | Failure errors -> Lwt.return (JsonTools.errors errors))
