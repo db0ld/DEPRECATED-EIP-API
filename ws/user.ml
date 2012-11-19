@@ -22,6 +22,14 @@ include UserTable
 
 let create_user
     (login, (firstname, (surname, (gender, (birthdate, (email, password)))))) =
+  let gender =
+    match gender with
+      | Some g -> g
+      | None   -> ApiTypes.Gender.default
+  and birthdate =
+    match birthdate with
+      | Some bd -> bd
+      | None   -> ApiTypes.Date.empty in
   let errors =
     Otools.option_filter
       [if Valid.login login = false
@@ -107,14 +115,14 @@ let _ =
     ~get_params:(string "login"
 		 ** string "firstname"
 		 ** string "surname"
-		 ** (user_type
-		       ~of_string:ApiTypes.Gender.of_string
-		       ~to_string:ApiTypes.Gender.to_string
-		       "gender")
-		 ** (user_type
-		       ~of_string:ApiTypes.Date.of_string
-		       ~to_string:ApiTypes.Date.to_string
-		       "birthdate")
+		 ** opt (user_type
+			   ~of_string:ApiTypes.Gender.of_string
+			   ~to_string:ApiTypes.Gender.to_string
+			   "gender")
+		 ** opt (user_type
+			   ~of_string:ApiTypes.Date.of_string
+			   ~to_string:ApiTypes.Date.to_string
+			   "birthdate")
 		 ** string "email"
 		 ** string "password"
                 )
