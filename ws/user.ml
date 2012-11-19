@@ -93,7 +93,7 @@ let json_user_profile user : Yojson.Basic.json =
 let _ =
   EliomJson.register_service
     ~path:["user"; ""]
-    ~get_params:(string "user_id" ** string "token")
+    ~get_params:(suffix_prod (string "user_id") (string "token"))
     (fun (user_id, token) () ->
       lwt token_owner = Auth.token_owner token in
       match token_owner with
