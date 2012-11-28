@@ -72,6 +72,13 @@ let sql_auth user =
   let logged = ignore (Db.query query)(* todo: check result *); true in
   Success (token, logged, expiration)
 
+let sql_delete_token token =
+  let token_str = token#!token in
+  let query =
+    <:delete< row in $table$ | row.token = $string:token_str$; >> in
+  let _ = Db.query query (* todo: check query *) in
+  Success (token_str, false, token#!expiration_time)
+
 (* string -> (macaque auth) Lwt                                               *)
 (* Get the token in the database                                              *)
 let get_token token =
@@ -81,9 +88,9 @@ let get_token token =
   Lwt.return
     (match token with
       | Some token ->
-	if ApiTypes.DateTime.is_past token#!expiration_time
-	then (print_endline "Nope"; None) (* todo: delete *)
-	else Some token
+        if ApiTypes.DateTime.is_past token#!expiration_time
+        then (print_endline "Nope"; None) (* todo: delete *)
+        else Some token
       | None -> None)
 
 (* ************************************************************************** *)
@@ -102,14 +109,18 @@ let check_password user password =
 let authenticate user =
   sql_auth user
 
-(* string -> ((macaque user) option) Lwt                                      *)
+(* ((macaque auth) option) -> ((macaque user) option) Lwt                     *)
 (* Take a token and return the user who own it                                *)
+let token_owner_from_token token =
+  match token with
+    | Some token -> UserTable.get_user_from_id token#!fk_user_id
+    | None       -> Lwt.return None
+
+(* string -> ((macaque user) option) Lwt                                      *)
+(* Take a string token and return the user who own it                         *)
 let token_owner token =
   lwt token = get_token token in
-  Lwt.return
-    (match token with
-      | Some token -> Some (UserTable.get_user_from_id token#!fk_user_id)
-      | None       -> None)
+  token_owner_from_token token
 
 (* string -> bool Lwt                                                          *)
 let is_authenticated token =
@@ -118,6 +129,9 @@ let is_authenticated token =
     (match user with
       | Some _ -> true
       | None   -> false)
+
+let delete_token =
+  sql_delete_token
 
 (* ************************************************************************** *)
 (* JSON tools                                                                 *)
@@ -146,15 +160,35 @@ let _ =
       lwt user = UserTable.get_user login in
       Lwt.return
         (match user with
-	  | Some user ->
-	    (if check_password user password
+          | Some user ->
+            (if check_password user password
              then match authenticate user with
                | Success auth -> JsonTools.success (json_auth auth)
                | Failure err  -> JsonTools.error err
              else JsonTools.error Rspcode.wrong_pwd)
-	  | None -> JsonTools.error Rspcode.wrong_usr))
+          | None -> JsonTools.error Rspcode.wrong_usr))
 
 (* ************************************************************************** *)
 (* Logout                                                                     *)
 (* ************************************************************************** *)
 
+let _ =
+  EliomJson.register_service
+    ~path:["auth";"logout"]
+    ~get_params:(string "login" ** string "token")
+    (fun (login, token_str) () ->
+      lwt token = get_token token_str in
+      lwt owner = token_owner_from_token token in
+      Lwt.return
+        (match token with
+          | None -> JsonTools.error Rspcode.invalid_token
+          | Some token ->
+            (match owner with
+              | None -> JsonTools.error Rspcode.no_user
+              | Some o ->
+                if o#!login = login
+                then
+                  match delete_token token with
+                    | Failure rsp -> JsonTools.error rsp
+                    | Success res -> JsonTools.success (json_auth res)
+                else JsonTools.error Rspcode.unmatch_user)))

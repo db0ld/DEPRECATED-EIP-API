@@ -55,3 +55,5 @@ let invalid_login : t = (invalid, "INVALID_LOGIN")
 let invalid_name  : t = (invalid, "INVALID_NAME")
 let invalid_email : t = (invalid, "INVALID_EMAIL")
 let invalid_passw : t = (invalid, "INVALID_PASSWORD")
+
+let unmatch_user : t = (incorrect, "USER_DOES_NOT_MATCH")
