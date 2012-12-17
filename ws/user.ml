@@ -36,11 +36,11 @@ let create_user
     Otools.option_filter
       [if Valid.login login = false
        then (print_endline ("invalid login " ^ login);
-             Some Rspcode.invalid_login) else None;
+             Some ApiRsp.invalid_login) else None;
        if Valid.name firstname = false || Valid.name surname = false
-       then Some Rspcode.invalid_name else None;
+       then Some ApiRsp.invalid_name else None;
        if Valid.email email = false
-       then Some Rspcode.invalid_email else None;
+       then Some ApiRsp.invalid_email else None;
       ] in
   let query =
     <:insert< $table$ :=
@@ -63,7 +63,7 @@ let create_user
   then
     (try (ignore (Db.query query); (* todo: how to check result of a query? *)
           Success ())
-     with _ -> Failure [Rspcode.invalid_passw])
+     with _ -> Failure [ApiRsp.invalid_passw])
   else Failure errors
 
 (* ************************************************************************** *)
@@ -110,8 +110,8 @@ let _ =
            Lwt.return
              (match user with
                | Some user -> JsonTools.success (json_user_profile user)
-               | None -> JsonTools.error Rspcode.no_user))
-        | None -> Lwt.return (JsonTools.error Rspcode.invalid_token))
+               | None -> JsonTools.error ApiRsp.no_user))
+        | None -> Lwt.return (JsonTools.error ApiRsp.invalid_token))
 
 (* ************************************************************************** *)
 (* Register a new user                                                        *)

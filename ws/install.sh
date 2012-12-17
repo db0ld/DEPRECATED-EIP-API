@@ -43,6 +43,7 @@ function	delete_files() {
     rm -f "tools.eliom" "tools.eliomi"
     rm -f "otools.ml" "otools.mli"
     rm -f "apiTypes.ml"
+    rm -f "apiRsp.ml"
 }
 
 function	install_modules() {
@@ -52,6 +53,7 @@ function	install_modules() {
     wget "https://raw.github.com/db0company/OcsiTools/master/otools.ml" && \
     wget "https://raw.github.com/db0company/Ocsitools/master/otools.mli" && \
     wget "https://github.com/LaVieEstUnJeu/Public-API/raw/master/examples/ocaml/apiTypes.ml" && \
+    wget "https://github.com/LaVieEstUnJeu/Public-API/raw/master/examples/ocaml/apiRsp.ml" && \
     return 0
     return 1
 }
@@ -69,6 +71,7 @@ function	install_modules_links() {
     ln -s $path"/OcsiTools/otools.ml" && \
     ln -s $path"/OcsiTools/otools.mli" && \
     ln -s $path"/Public-API/examples/ocaml/apiTypes.ml" && \
+    ln -s $path"/Public-API/examples/ocaml/apiRsp.ml" && \
     return 0
     return 1
 }

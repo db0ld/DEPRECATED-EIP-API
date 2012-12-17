@@ -165,8 +165,8 @@ let _ =
              then match authenticate user with
                | Success auth -> JsonTools.success (json_auth auth)
                | Failure err  -> JsonTools.error err
-             else JsonTools.error Rspcode.wrong_pwd)
-          | None -> JsonTools.error Rspcode.wrong_usr))
+             else JsonTools.error ApiRsp.wrong_pwd)
+          | None -> JsonTools.error ApiRsp.wrong_usr))
 
 (* ************************************************************************** *)
 (* Logout                                                                     *)
@@ -181,14 +181,14 @@ let _ =
       lwt owner = token_owner_from_token token in
       Lwt.return
         (match token with
-          | None -> JsonTools.error Rspcode.invalid_token
+          | None -> JsonTools.error ApiRsp.invalid_token
           | Some token ->
             (match owner with
-              | None -> JsonTools.error Rspcode.no_user
+              | None -> JsonTools.error ApiRsp.no_user
               | Some o ->
                 if o#!login = login
                 then
                   match delete_token token with
                     | Failure rsp -> JsonTools.error rsp
                     | Success res -> JsonTools.success (json_auth res)
-                else JsonTools.error Rspcode.unmatch_user)))
+                else JsonTools.error ApiRsp.unmatch_user)))

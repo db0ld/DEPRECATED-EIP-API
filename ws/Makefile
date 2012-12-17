@@ -12,7 +12,7 @@ SRC_PACKAGES := calendar yojson macaque.syntax str
 SRC_FILES    := 		\
 		valid.ml	\
 		otools.ml	\
-		rspcode.ml	\
+		apiRsp.ml	\
 		jsonTools.ml	\
 		apiTypes.ml	\
 		eliomJson.ml	\
