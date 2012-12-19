@@ -69,8 +69,8 @@ let sql_auth user =
          fk_api_client_id  = 0; (* todo: what is it? *)
          token             = $string:token$
        } >> in
-  let logged = ignore (Db.query query)(* todo: check result *); true in
-  Success (token, logged, expiration)
+  lwt a = Db.query query in
+  Lwt.return (Success (token, true (* todo check result of sql query *), expiration))
 
 let sql_delete_token token =
   let token_str = token#!token in
@@ -158,15 +158,17 @@ let _ =
     ~get_params:(string "login" ** string "password")
     (fun (login, password) () ->
       lwt user = UserTable.get_user login in
-      Lwt.return
         (match user with
           | Some user ->
             (if check_password user password
-             then match authenticate user with
-               | Success auth -> JsonTools.success (json_auth auth)
-               | Failure err  -> JsonTools.error err
-             else JsonTools.error ApiRsp.wrong_pwd)
-          | None -> JsonTools.error ApiRsp.wrong_usr))
+             then
+                lwt auth = authenticate user in
+                Lwt.return
+                  (match auth with
+                    | Success auth -> JsonTools.success (json_auth auth)
+                    | Failure err  -> JsonTools.error err)
+             else Lwt.return (JsonTools.error ApiRsp.wrong_pwd))
+          | None -> Lwt.return (JsonTools.error ApiRsp.wrong_usr)))
 
 (* ************************************************************************** *)
 (* Logout                                                                     *)

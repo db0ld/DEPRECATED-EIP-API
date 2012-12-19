@@ -61,10 +61,9 @@ let create_user
        } >> in
   if List.length errors = 0
   then
-    (try (ignore (Db.query query); (* todo: how to check result of a query? *)
-          Success ())
-     with _ -> Failure [ApiRsp.invalid_passw])
-  else Failure errors
+    lwt q = Db.query query in
+    Lwt.return (Success ()) (* todo: check result query *)
+  else Lwt.return (Failure errors)
 
 (* ************************************************************************** *)
 (* JSON Tools                                                                 *)
@@ -135,8 +134,12 @@ let _ =
                  ** string "password"
                 )
     (fun infos () ->
-      match create_user infos with
-          | Success _    -> Lwt.return (JsonTools.success `Null)
-            (* (get_user login >>= fun user -> *)
-            (*   Lwt.return (json_user_profile user)) *)
+      let glogin     (login, (firstname, (surname, (gender, (birthdate, (email, password)))))) = login in
+      lwt cu = create_user infos in
+      match cu with
+          | Success _    ->
+            (lwt user = get_user (glogin infos) in
+             Lwt.return (match user with
+               | Some user -> (json_user_profile user)
+               | None      -> JsonTools.success `Null))
           | Failure errors -> Lwt.return (JsonTools.errors errors))
