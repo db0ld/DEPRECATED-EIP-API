@@ -60,7 +60,7 @@ function	install_modules() {
 
 function	install_modules_links() {
     delete_files
-    defaultpath=~/dev
+    defaultpath=../../
     echo -n "Depositories path ("$defaultpath")? " && \
     read path && \
     if [ -z $path ]
