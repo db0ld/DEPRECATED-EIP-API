@@ -77,7 +77,7 @@ let sql_delete_token token =
   let query =
     <:delete< row in $table$ | row.token = $string:token_str$; >> in
   let _ = Db.query query (* todo: check query *) in
-  Success (token_str, false, token#!expiration_time)
+  Success (token_str, false, ApiTypes.DateTime.now ())
 
 (* string -> (macaque auth) Lwt                                               *)
 (* Get the token in the database                                              *)
