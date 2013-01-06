@@ -21,7 +21,7 @@ SRC_FILES    := 		\
 		auth.ml		\
 		user.ml		\
 		achievement.ml	\
-				\
+		achievementTable.ml	\
 
 ## Required binaries
 ELIOMC      := eliomc
