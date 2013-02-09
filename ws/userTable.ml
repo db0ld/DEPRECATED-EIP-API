@@ -24,7 +24,9 @@ let table = <:table< user (
   password_hash text NOT NULL,
   password_salt text NOT NULL,
   fk_avatar_media_id integer (* DEFAULT(0) *),
-  fk_locale_id integer NOT NULL
+  fk_locale_id integer NOT NULL,
+  email_code text,
+  verified boolean (* DEFAULT false *) NOT NULL
 ) >>
 
 (* ************************************************************************** *)

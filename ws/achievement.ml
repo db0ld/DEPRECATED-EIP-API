@@ -5,31 +5,65 @@
 (* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/API          *)
 (* ************************************************************************** *)
 
-let achievement_id_seq = (<:sequence< serial "achievement_id_seq" >>)
+(* Achievement : Element *)
+(* name = string *)
+(* description = string *)
+(* badge = picture *)
+(* parent_id = string *)
+(* child_achievements = List<Achievement> *)
 
-let table = <:table< achievement (
-  id integer NOT NULL DEFAULT(nextval $achievement_id_seq$),
-  creation_time timestamp NOT NULL (* DEFAULT(current_timestamp) *),
-  modification_time timestamp NOT NULL,
-  fk_creator_user_id integer NOT NULL,
-  fk_icon_media_id integer (* DEFAULT(0) *),
-  fk_achievement_category_id integer NOT NULL,
-  fk_achivement_parent_id integer (* DEFAULT(0) *),
-  default_privacy integer NOT NULL (* does macaque support custom enum? *)
-) >>
+(* Représente un achievement réalisable. Cet élément n’est pas modifiable, sauf par un administrateur. Il contient les caractéristiques de l’achievement ainsi que les achievements réalisables une fois que celui-ci est réalisé. L’ensemble des achievements forme un arbre. *)
 
-let select id =
-  let id = Int32.of_int id in
-  Db.select_first
-    (<:select<
-        { a = row_a ; u = row_u } |
-	 row_a in $table$ ; row_u in $User.table$ ;
-         row_a.id = $int32:id$ >>)
+(* Achievement *)
+(* create	POST(Achievement) -> Achievement *)
+(* search	GET-> List<Achievement> *)
+(* {id}		GET-> Achievement *)
+(* {id}/edit	POST(Achievement)-> Achievement *)
+(* [id}/delete	GET-> Achievement *)
+(* {id}/plan	GET-> AchievementStatus *)
 
-(* let _ = *)
-(*   lwt a = select 1 in *)
-(*   Lwt.return *)
-(*     (match a with *)
-(*       | Some a -> print_endline a#!u#!login *)
-(*       | None   -> print_endline "none") *)
+
+open Eliom_content
+open Eliom_parameter
+open CalendarLib
+open Otools
+
+(* ************************************************************************** *)
+(* Table                                                                      *)
+(* ************************************************************************** *)
+
+include AchievementTable
+
+(* ************************************************************************** *)
+(* SQL Tools                                                                  *)
+(* ************************************************************************** *)
+
+(* ************************************************************************** *)
+(* JSON Tools                                                                 *)
+(* ************************************************************************** *)
+
+(* ************************************************************************** *)
+(* API Queries                                                                *)
+(* ************************************************************************** *)
+
+let urlpref = "achievement"
+
+(* ************************************************************************** *)
+(* Get an achievement by its id                                               *)
+(* ************************************************************************** *)
+
+let _ =
+  EliomJson.register_service
+    ~path:[urlpref]
+    ~get_params:(suffix_prod (int32 "id") (string "token"))
+    (fun (id, token) () ->
+      lwt token_owner = Auth.token_owner token in
+      match token_owner with
+        | Some user_logued ->
+          (lwt achievement = get_achievement id in
+           Lwt.return
+             (match achievement with
+               | Some achievement -> JsonTools.success `Null
+               | None -> JsonTools.error ApiRsp.no_user (*to change*)))
+        | None -> Lwt.return (JsonTools.error ApiRsp.invalid_token))
 

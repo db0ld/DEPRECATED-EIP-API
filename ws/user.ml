@@ -57,7 +57,9 @@ let create_user
          password_hash      = $string:password$; (* todo *)
          password_salt      = $string:password$; (* todo *)
          fk_avatar_media_id = 0; (* todo *)
-         fk_locale_id       = 0; (* todo *)
+         fk_locale_id       = 1; (* todo *)
+	 email_code         = ""; (* todo *)
+	 verified           = false; (* todo *)
        } >> in
   if List.length errors = 0
   then
